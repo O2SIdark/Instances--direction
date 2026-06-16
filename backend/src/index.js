@@ -42,7 +42,7 @@ app.use((err, req, res, next) => {
 const { pool } = require('./config/database');
 pool.query('SELECT NOW()').then(async () => {
   app.listen(PORT, async () => {
-    console.log(`🚀 Serveur sur http://localhost:${PORT}`);
+    console.log(` Serveur sur http://localhost:${PORT}`);
     console.log(' PostgreSQL connecté');
     await testerConnexion();
     demarrerCron(); // ← démarre l'envoi automatique des emails

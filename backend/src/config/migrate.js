@@ -124,7 +124,7 @@ async function migrate() {
     await client.query(`CREATE INDEX IF NOT EXISTS idx_intervenants_dos ON intervenants(dossier_id);`);
 
     await client.query('COMMIT');
-    console.log('✅ Migration réussie — tables et colonnes à jour');
+    console.log(' Migration réussie — tables et colonnes à jour');
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('❌ Erreur migration:', err.message);

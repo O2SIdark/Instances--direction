@@ -152,7 +152,7 @@ export default function Dossiers() {
       });
       setShowModal(false);
       setForm(emptyForm);
-      afficherToast('✅ Dossier créé avec succès');
+      afficherToast(' Dossier créé avec succès');
       charger();
     } catch (err: any) {
       setErreur(err.message);
@@ -179,7 +179,7 @@ export default function Dossiers() {
     if (!confirm(`Valider et clôturer "${objet}" ? Cette action est irréversible.`)) return;
     try {
       await apiFetch(`/dossiers/${id}/valider`, { method: 'PATCH' });
-      afficherToast('✅ Dossier validé — emails envoyés aux intervenants');
+      afficherToast(' Dossier validé — emails envoyés aux intervenants');
       if (dossierDetail?.id === id) await ouvrirDetail(id);
       charger();
     } catch (err: any) {
@@ -382,7 +382,7 @@ export default function Dossiers() {
                       </p>
                       {(d.nb_alertes || 0) > 0 && (
                         <span className="badge badge-danger" style={{ fontSize: 10 }}>
-                          🔔 {d.nb_alertes}
+                           {d.nb_alertes}
                         </span>
                       )}
                     </td>
@@ -413,7 +413,7 @@ export default function Dossiers() {
                         <p className={`text-xs mt-0.5 ${
                           enRetard ? 'text-red-500' : jours <= 7 ? 'text-amber-500' : 'text-gray-400'
                         }`}>
-                          {enRetard ? `⚠️ ${Math.abs(jours)}j retard` : `${jours}j restants`}
+                          {enRetard ? ` ${Math.abs(jours)}j retard` : `${jours}j restants`}
                         </p>
                       )}
                     </td>
@@ -523,7 +523,7 @@ export default function Dossiers() {
                                 onMouseEnter={e => (e.currentTarget.style.background = '#ECFDF5')}
                                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                               >
-                                <span>✅</span>
+                                <span>✔️</span>
                                 <span>Valider et clôturer</span>
                               </button>
                             )}

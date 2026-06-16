@@ -54,7 +54,7 @@ export default function NavWrapper({ children }: { children: React.ReactNode }) 
 
             <div>
               <p className="text-white font-bold text-sm">
-                Suivi des Instances de la Direction
+                Gestion des Instances de la Direction
               </p>
               <p className="text-red-100 text-xs">
                 Burkina Faso

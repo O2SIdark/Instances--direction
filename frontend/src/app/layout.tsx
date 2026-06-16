@@ -3,7 +3,7 @@ import './globals.css';
 import NavWrapper from './NavWrapper';
 
 export const metadata: Metadata = {
-  title: 'Suivi des Instances de la Direction — Burkina Faso',
+  title: 'Gestion des Instances de la Direction — Burkina Faso',
   description: 'Tableau de bord de gestion des instances',
 };
 

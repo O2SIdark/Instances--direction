@@ -7,8 +7,6 @@ const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 const DEMO = [
   { label: 'Administrateur', email: 'admin@univ-burkina.bf',       mdp: 'admin123' },
-  { label: 'Agent',          email: 'f.ouedraogo@univ-burkina.bf', mdp: 'agent123' },
-  { label: 'Validateur',     email: 'm.sawadogo@univ-burkina.bf',  mdp: 'valid123' },
 ];
 
 export default function Login() {
@@ -17,6 +15,7 @@ export default function Login() {
   const [mdp,        setMdp]        = useState('admin123');
   const [erreur,     setErreur]     = useState('');
   const [chargement, setChargement] = useState(false);
+  const [voirMdp,    setVoirMdp]    = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -109,12 +108,36 @@ export default function Login() {
 
           <div style={{ marginBottom: '20px' }}>
             <label className="form-label">Mot de passe</label>
-            <input
-              type="password" required value={mdp}
-              onChange={e => setMdp(e.target.value)}
-              placeholder="••••••••"
-              className="form-input"
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={voirMdp ? 'text' : 'password'}
+                required value={mdp}
+                onChange={e => setMdp(e.target.value)}
+                placeholder="••••••••"
+                className="form-input"
+                style={{ paddingRight: '40px', width: '100%', boxSizing: 'border-box' }}
+              />
+              <button
+                type="button"
+                onClick={() => setVoirMdp(v => !v)}
+                aria-label={voirMdp ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  color: '#6B7280',
+                  padding: '4px',
+                  lineHeight: 1,
+                }}
+              >
+                {voirMdp ? '👁' : '👁'}
+              </button>
+            </div>
           </div>
 
           <button

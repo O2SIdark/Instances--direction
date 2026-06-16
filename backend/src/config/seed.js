@@ -66,9 +66,9 @@ async function seed() {
       await client.query(`
         INSERT INTO taches (dossier_id, titre, responsable, statut, date_echeance)
         VALUES
-          ($1, 'Audit des UE existantes', 'OUÉDRAOGO F.', 'Terminée', '2025-03-31'),
-          ($1, 'Rédaction nouveaux syllabi', 'KABORÉ I.', 'En cours', '2025-07-31'),
-          ($1, 'Validation Conseil Académique', 'SAWADOGO M.', 'À faire', '2025-09-15')
+          ($1, 'Audit des UE existantes', 'OUÉDRAOGO O.', 'Terminée', '2025-03-31'),
+          ($1, 'Rédaction nouveaux syllabi', 'TIONO W.J', 'En cours', '2025-07-31'),
+          ($1, 'Validation Conseil Académique', 'DIARRA M.', 'À faire', '2025-09-15')
       `, [d1.id]);
     }
 

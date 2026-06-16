@@ -1,7 +1,8 @@
 {
   "/page": "app/page.js",
-  "/dossiers/page": "app/dossiers/page.js",
   "/stats/page": "app/stats/page.js",
   "/alertes/page": "app/alertes/page.js",
-  "/utilisateurs/page": "app/utilisateurs/page.js"
+  "/utilisateurs/page": "app/utilisateurs/page.js",
+  "/login/page": "app/login/page.js",
+  "/dossiers/page": "app/dossiers/page.js"
 }

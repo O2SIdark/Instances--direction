@@ -39,9 +39,9 @@ async function testerConnexion() {
 // ── Template HTML email alerte ────────────────────────────
 function templateAlerte({ priorite, dossier, objet, motif, responsable }) {
   const cfg = {
-    Critique: { couleur: '#DC2626', bg: '#FEE2E2', icone: '🚨' },
-    Modérée:  { couleur: '#D97706', bg: '#FEF3C7', icone: '⚠️' },
-    Info:     { couleur: '#2563EB', bg: '#DBEAFE', icone: 'ℹ️' },
+    Critique: { couleur: '#DC2626', bg: '#FEE2E2', icone: '🔴' },
+    Modérée:  { couleur: '#D97706', bg: '#FEF3C7', icone: '🟡' },
+    Info:     { couleur: '#2563EB', bg: '#DBEAFE', icone: '🔵' },
   };
   const c = cfg[priorite] || cfg.Info;
 
@@ -180,10 +180,10 @@ async function envoyerAlerteEmail({ destinataire, priorite, dossier,
       subject: `🔔 [${priorite}] Dossier ${dossier} — ${motif}`,
       html:    templateAlerte({ priorite, dossier, objet, motif, responsable }),
     });
-    console.log(`📧 Email envoyé à ${destinataire}`);
+    console.log(` Email envoyé à ${destinataire}`);
     return true;
   } catch (err) {
-    console.error(`❌ Échec envoi email à ${destinataire}:`, err.message);
+    console.error(` Échec envoi email à ${destinataire}:`, err.message);
     return false;
   }
 }

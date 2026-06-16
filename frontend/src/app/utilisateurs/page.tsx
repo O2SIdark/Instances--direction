@@ -48,7 +48,7 @@ export default function Utilisateurs() {
       await apiFetch('/auth/utilisateurs', {
         method: 'POST', body: JSON.stringify(form),
       });
-      setSucces(`✅ Compte créé pour ${form.prenom} ${form.nom}`);
+      setSucces(`✔️ Compte créé pour ${form.prenom} ${form.nom}`);
       setForm(emptyForm);
       setShowForm(false);
       charger();
@@ -110,7 +110,7 @@ export default function Utilisateurs() {
                 <label className="form-label">Prénom *</label>
                 <input className="form-input" value={form.prenom} required
                   onChange={e => setForm({ ...form, prenom: e.target.value })}
-                  placeholder="Fatimata" />
+                  placeholder="Ousseni" />
               </div>
               <div>
                 <label className="form-label">Nom *</label>
@@ -124,7 +124,7 @@ export default function Utilisateurs() {
               <label className="form-label">Email *</label>
               <input type="email" className="form-input" value={form.email} required
                 onChange={e => setForm({ ...form, email: e.target.value })}
-                placeholder="prenom.nom@univ-burkina.bf" />
+                placeholder="prenom.nom@gmail.com" />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -155,9 +155,9 @@ export default function Utilisateurs() {
 
             {/* Explication des rôles */}
             <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-500 space-y-1">
-              <p><strong className="text-red-600">Admin</strong> — Tous les droits, création de comptes, suppression et clôture de tous les dossiers</p>
-              <p><strong className="text-amber-600">Validateur</strong> — Peut clôturer les dossiers</p>
-              <p><strong className="text-blue-600">Agent</strong> — Consultation et création de dossiers uniquement</p>
+              <p><strong className="text-red-600">Admin</strong>      :  Tous les droits, création de comptes, suppression et clôture de tous les dossiers</p>
+              <p><strong className="text-amber-600">Validateur</strong> : Peut clôturer les dossiers</p>
+              <p><strong className="text-blue-600">Agent</strong> : Consultation et création de dossiers uniquement</p>
             </div>
 
             <div className="flex justify-end gap-3">
