@@ -8,15 +8,15 @@ const CFG_PRIORITE: Record<string, {
 }> = {
   Critique: {
     bg: '#FEF2F2', border: '#FECACA',
-    text: '#DC2626', icone: '🚨', label: 'Critique',
+    text: '#DC2626', icone: '', label: 'Critique',
   },
   'Modérée': {
     bg: '#FFFBEB', border: '#FDE68A',
-    text: '#D97706', icone: '⚠️', label: 'Modérée',
+    text: '#D97706', icone: '', label: 'Modérée',
   },
   Info: {
     bg: '#EFF6FF', border: '#BFDBFE',
-    text: '#2563EB', icone: 'ℹ️', label: 'Info',
+    text: '#2563EB', icone: '', label: 'Info',
   },
 };
 
@@ -60,11 +60,11 @@ export default function Alertes() {
           responsable:  emailModal.responsable,
         }),
       });
-      alert(`✅ Email envoyé à ${emailDest}`);
+      alert(` Email envoyé à ${emailDest}`);
       setEmailModal(null);
       setEmailDest('');
     } catch (err: any) {
-      alert(`❌ Erreur : ${err.message}`);
+      alert(` Erreur : ${err.message}`);
     } finally { setEnvoi(null); }
   };
 
@@ -81,11 +81,11 @@ export default function Alertes() {
       <div className="grid grid-cols-3 gap-4">
         {[
           { label: 'Critiques',  val: nb.critique, couleur: '#DC2626',
-            bg: '#FEF2F2', icone: '🚨' },
+            bg: '#FEF2F2', icone: '' },
           { label: 'Modérées',   val: nb.moderee,  couleur: '#D97706',
-            bg: '#FFFBEB', icone: '⚠️' },
+            bg: '#FFFBEB', icone: '' },
           { label: 'Info',       val: nb.info,     couleur: '#2563EB',
-            bg: '#EFF6FF', icone: 'ℹ️' },
+            bg: '#EFF6FF', icone: '' },
         ].map(c => (
           <button
             key={c.label}
@@ -137,7 +137,7 @@ export default function Alertes() {
       {/* ── Liste des alertes ── */}
       {alertesFiltrees.length === 0 ? (
         <div className="card text-center py-16">
-          <p className="text-4xl mb-3">✅</p>
+          <p className="text-4xl mb-3"></p>
           <p className="text-gray-400 font-medium">
             {filtre
               ? `Aucune alerte "${filtre}"`
@@ -186,7 +186,7 @@ export default function Alertes() {
                         </span>
                         {a.type === 'validation' && (
                           <span className="badge badge-success text-xs">
-                            ✅ Bouclé
+                             Bouclé
                           </span>
                         )}
                       </div>
@@ -241,7 +241,7 @@ export default function Alertes() {
                       }}
                       title="Envoyer cette alerte par email"
                     >
-                      📧 Envoyer
+                      📩   Envoyer
                     </button>
                   )}
                 </div>
@@ -261,7 +261,7 @@ export default function Alertes() {
               borderRadius: '12px 12px 0 0',
             }} className="p-4 flex justify-between items-center">
               <h3 className="text-white font-bold">
-                📧 Envoyer l'alerte par email
+                 Envoyer l'alerte par email
               </h3>
               <button onClick={() => setEmailModal(null)}
                 className="text-white/70 hover:text-white text-xl">
@@ -304,7 +304,7 @@ export default function Alertes() {
                   onClick={envoyerEmail}
                   disabled={!emailDest || !!envoi}
                 >
-                  {envoi ? '⏳ Envoi...' : '📧 Envoyer'}
+                  {envoi ? '⏳ Envoi...' : ' Envoyer'}
                 </button>
               </div>
             </div>

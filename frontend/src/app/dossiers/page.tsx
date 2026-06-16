@@ -1,5 +1,6 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
+
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { apiFetch, getUtilisateur } from '@/lib/auth';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
@@ -81,6 +82,21 @@ export default function Dossiers() {
   const [erreur,         setErreur]         = useState('');
   const [uploadEnCours,  setUploadEnCours]  = useState(false);
   const [toast,          setToast]          = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
+  
+  // États et Ref pour le menu déroulant d'actions
+  const [menuOuvert,     setMenuOuvert]     = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  // ── Fermer le menu déroulant au clic extérieur ──
+  useEffect(() => {
+    const fermer = (e: MouseEvent) => {
+      if (menuOuvert && menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOuvert(null);
+      }
+    };
+    document.addEventListener('mousedown', fermer);
+    return () => document.removeEventListener('mousedown', fermer);
+  }, [menuOuvert]);
 
   // ── Toast ───────────────────────────────────────────────
   const afficherToast = (msg: string, type: 'ok' | 'err' = 'ok') => {
@@ -257,6 +273,13 @@ export default function Dossiers() {
   return (
     <div>
 
+      {/* Toast de Notification */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 p-3 rounded shadow-lg text-white text-sm font-medium ${toast.type === 'ok' ? 'bg-green-600' : 'bg-red-600'}`}>
+          {toast.msg}
+        </div>
+      )}
+
       {/* ── Filtres + actions ── */}
       <div className="flex flex-wrap gap-3 mb-4 items-center">
 
@@ -302,7 +325,12 @@ export default function Dossiers() {
           </button>
           <button
             className="btn-primary"
-            onClick={() => { setForm(emptyForm); setErreur(''); setShowModal(true); }}
+            onClick={(e) => { 
+              e.stopPropagation();
+              setForm(emptyForm); 
+              setErreur(''); 
+              setShowModal(true); 
+            }}
           >
             + Nouveau dossier
           </button>
@@ -415,28 +443,115 @@ export default function Dossiers() {
 
                     {/* Actions */}
                     <td className="px-4 py-3">
-                      <div className="flex gap-2 items-center flex-wrap">
+                      <div 
+                        ref={menuOuvert === d.id ? menuRef : null} 
+                        className="relative inline-block text-left"
+                      >
                         <button
-                          onClick={() => ouvrirDetail(d.id)}
-                          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setMenuOuvert(menuOuvert === d.id ? null : d.id);
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 32,
+                            height: 32,
+                            borderRadius: 8,
+                            border: '1px solid #E5E7EB',
+                            background: menuOuvert === d.id ? '#F3F4F6' : '#fff',
+                            cursor: 'pointer',
+                            fontSize: 16,
+                            color: '#6B7280',
+                            transition: 'background 0.15s',
+                          }}
+                          title="Actions"
                         >
-                          👁 Voir
+                          ⋮
                         </button>
-                        {peutValider(d) && d.statut !== 'Bouclé' && (
-                          <button
-                            onClick={() => valider(d.id, d.objet)}
-                            className="text-xs text-green-600 hover:text-green-800 font-medium"
+
+                        {menuOuvert === d.id && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              right: 0,
+                              top: '110%',
+                              zIndex: 50,
+                              minWidth: 190,
+                              background: '#fff',
+                              borderRadius: 10,
+                              border: '1px solid #E5E7EB',
+                              boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                              padding: 6,
+                              overflow: 'hidden',
+                            }}
                           >
-                            ✅ Valider
-                          </button>
-                        )}
-                        {peutSupprimer(d) && (
-                          <button
-                            onClick={() => supprimer(d.id, d.objet)}
-                            className="text-xs text-red-400 hover:text-red-600"
-                          >
-                            🗑
-                          </button>
+                            <button
+                              onClick={(e) => { 
+                                e.stopPropagation(); 
+                                ouvrirDetail(d.id); 
+                                setMenuOuvert(null); 
+                              }}
+                              style={{
+                                width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                                padding: '9px 12px', borderRadius: 7, border: 'none',
+                                background: 'transparent', cursor: 'pointer',
+                                fontSize: 13, color: '#1F2937', textAlign: 'left',
+                              }}
+                              onMouseEnter={e => (e.currentTarget.style.background = '#EFF6FF')}
+                              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                            >
+                              <span style={{ fontSize: 15 }}>👁</span>
+                              <span>Voir le détail</span>
+                            </button>
+
+                            {peutValider(d) && d.statut !== 'Bouclé' && (
+                              <button
+                                onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  valider(d.id, d.objet); 
+                                  setMenuOuvert(null); 
+                                }}
+                                style={{
+                                  width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                                  padding: '9px 12px', borderRadius: 7, border: 'none',
+                                  background: 'transparent', cursor: 'pointer',
+                                  fontSize: 13, color: '#059669', textAlign: 'left',
+                                }}
+                                onMouseEnter={e => (e.currentTarget.style.background = '#ECFDF5')}
+                                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                              >
+                                <span>✅</span>
+                                <span>Valider et clôturer</span>
+                              </button>
+                            )}
+
+                            {peutSupprimer(d) && (
+                              <>
+                                <div style={{ height: 1, background: '#F3F4F6', margin: '4px 0' }} />
+                                <button
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    supprimer(d.id, d.objet); 
+                                    setMenuOuvert(null); 
+                                  }}
+                                  style={{
+                                    width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                                    padding: '9px 12px', borderRadius: 7, border: 'none',
+                                    background: 'transparent', cursor: 'pointer',
+                                    fontSize: 13, color: '#DC2626', textAlign: 'left',
+                                  }}
+                                  onMouseEnter={e => (e.currentTarget.style.background = '#FEF2F2')}
+                                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                                >
+                                  <span style={{ fontSize: 15 }}>🗑</span>
+                                  <span>Supprimer</span>
+                                </button>
+                              </>
+                            )}
+                          </div>
                         )}
                       </div>
                     </td>
@@ -448,7 +563,221 @@ export default function Dossiers() {
         </table>
       </div>
 
-      {/* ════ PANNEAU DÉTAIL ════ */}
+      {/* ── MODAL DE CRÉATION DE DOSSIER DÉGRADÉE ET STYLISÉE ── */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            
+            {/* Header personnalisé avec Dégradé */}
+            <div 
+              style={{ background: 'linear-gradient(135deg, #EF2B2D, #009A44)' }} 
+              className="p-4 flex justify-between items-center text-white"
+            >
+              <h2 className="text-lg font-bold">Nouveau dossier</h2>
+              <button 
+                onClick={() => setShowModal(false)} 
+                className="text-white/80 hover:text-white text-2xl font-semibold leading-none focus:outline-none"
+              >
+                &times;
+              </button>
+            </div>
+            
+            {/* Corps du Formulaire */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {erreur && (
+                <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg border border-red-100">
+                  ⚠️ {erreur}
+                </div>
+              )}
+              
+              {/* Référence */}
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Référence *</label>
+                <input 
+                  type="text" 
+                  className="form-input w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none" 
+                  value={form.reference} 
+                  onChange={e => setForm({...form, reference: e.target.value})} 
+                  placeholder="UB-2025-XXX" 
+                />
+              </div>
+
+              {/* Objet */}
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Objet du dossier *</label>
+                <input 
+                  type="text" 
+                  className="form-input w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none" 
+                  value={form.objet} 
+                  onChange={e => setForm({...form, objet: e.target.value})} 
+                  placeholder="Intitulé du dossier" 
+                />
+              </div>
+
+              {/* Instance */}
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Instance</label>
+                <select 
+                  className="form-input w-full border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none" 
+                  value={form.instance} 
+                  onChange={e => setForm({...form, instance: e.target.value})}
+                >
+                  {INSTANCES.map(inst => <option key={inst} value={inst}>{inst}</option>)}
+                </select>
+              </div>
+
+              {/* Date Limite */}
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Date limite *</label>
+                <input 
+                  type="date" 
+                  className="form-input w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none text-gray-500" 
+                  value={form.date_limite} 
+                  onChange={e => setForm({...form, date_limite: e.target.value})} 
+                />
+              </div>
+
+              {/* Avancement (Slider) */}
+              <div>
+                <div className="flex justify-between text-sm font-medium text-gray-600 mb-1">
+                  <span>Avancement (%) — {form.niveau_mise_en_oeuvre}%</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="100" 
+                  step="5"
+                  className="w-full accent-green-600 cursor-pointer" 
+                  value={form.niveau_mise_en_oeuvre} 
+                  onChange={e => setForm({...form, niveau_mise_en_oeuvre: parseInt(e.target.value)})} 
+                />
+                <div className="flex justify-between text-xs text-gray-400 mt-1">
+                  <span>0%</span>
+                  <span>50%</span>
+                  <span>100%</span>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Description</label>
+                <textarea 
+                  className="form-input w-full h-24 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none resize-none" 
+                  value={form.description} 
+                  onChange={e => setForm({...form, description: e.target.value})} 
+                  placeholder="Contexte et informations complémentaires..." 
+                />
+              </div>
+
+              {/* Section Intervenants */}
+              <div className="border-t border-gray-100 pt-4">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-sm font-medium text-gray-600">Intervenants</span>
+                  <button 
+                    type="button" 
+                    onClick={ajouterIntervenant} 
+                    className="text-sm text-green-600 hover:text-green-700 font-medium transition-colors"
+                  >
+                    + Ajouter
+                  </button>
+                </div>
+                
+                <div className="space-y-3">
+                  {form.intervenants.map((inter: any, idx: number) => (
+                    <div key={idx} className="bg-gray-50/60 border border-gray-100 rounded-xl p-4 space-y-3 relative">
+                      
+                      {/* Ligne Nom / Rôle */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs text-gray-400 mb-1">Nom complet</label>
+                          <input 
+                            type="text" 
+                            className="form-input w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none bg-white" 
+                            placeholder="OUÉDRAOGO Fatimata" 
+                            value={inter.nom} 
+                            onChange={e => majIntervenant(idx, 'nom', e.target.value)} 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-400 mb-1">Rôle</label>
+                          <input 
+                            type="text" 
+                            className="form-input w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none bg-white" 
+                            placeholder={idx === 0 ? "Responsable" : "Intervenant"}
+                            value={inter.role} 
+                            onChange={e => majIntervenant(idx, 'role', e.target.value)} 
+                          />
+                        </div>
+                      </div>
+
+                      {/* Ligne Direction / Email */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs text-gray-400 mb-1">Direction</label>
+                          <select 
+                            className="form-input w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm outline-none bg-white" 
+                            value={inter.direction} 
+                            onChange={e => majIntervenant(idx, 'direction', e.target.value)}
+                          >
+                            {DIRECTIONS.map(d => <option key={d} value={d}>{d}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-400 mb-1">Email (alertes)</label>
+                          <input 
+                            type="email" 
+                            className="form-input w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none bg-white" 
+                            placeholder="nom@univ-burkina.bf" 
+                            value={inter.email} 
+                            onChange={e => majIntervenant(idx, 'email', e.target.value)} 
+                          />
+                        </div>
+                      </div>
+
+                      {/* Suppression dynamique d'intervenant */}
+                      {form.intervenants.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setForm((f: any) => ({
+                            ...f,
+                            intervenants: f.intervenants.filter((_: any, i: number) => i !== idx)
+                          }))}
+                          className="text-xs text-red-500 hover:text-red-600 flex items-center gap-1 mt-1 transition-colors"
+                        >
+                          &times; Retirer cet intervenant
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Actions du pied de page */}
+            <div className="flex justify-end gap-3 border-t border-gray-100 p-4 bg-gray-50/40">
+              <button 
+                type="button" 
+                onClick={() => setShowModal(false)} 
+                className="px-5 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors" 
+                disabled={saving}
+              >
+                Annuler
+              </button>
+              <button 
+                type="button" 
+                onClick={sauvegarder} 
+                className="px-5 py-2 bg-[#009A44] hover:bg-[#00843A] text-white rounded-lg text-sm font-medium shadow-sm transition-colors" 
+                disabled={saving}
+              >
+                {saving ? 'Enregistrement...' : 'Enregistrer'}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* ── PANNEAU DÉTAIL ── */}
       {dossierDetail && (
         <div
           className="fixed inset-0 z-50 flex items-start justify-end"
@@ -484,7 +813,7 @@ export default function Dossiers() {
                 className="text-white/70 hover:text-white ml-4"
                 style={{ fontSize: 26, lineHeight: 1, background: 'none', border: 'none', cursor: 'pointer' }}
               >
-                ×
+                &times;
               </button>
             </div>
 
@@ -580,400 +909,73 @@ export default function Dossiers() {
                             <p className="text-xs text-blue-600">{iv.email}</p>
                           )}
                         </div>
-                        <div className="text-right">
-                          <p className="text-xs text-gray-400">Avancement</p>
-                          <p className="text-sm font-bold text-green-700">{iv.avancement}%</p>
-                        </div>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
 
-              {/* Tâches */}
-              {(dossierDetail.taches?.length || 0) > 0 && (
-                <div className="card">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                    Tâches ({dossierDetail.taches.length})
-                  </h3>
-                  <div className="space-y-2">
-                    {dossierDetail.taches.map((t: any) => (
-                      <div
-                        key={t.id}
-                        className="flex items-center justify-between bg-gray-50 rounded-lg p-3"
-                      >
-                        <div>
-                          <p className="text-sm font-medium">{t.titre}</p>
-                          {t.responsable && (
-                            <p className="text-xs text-gray-500">{t.responsable}</p>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {t.date_echeance && (
-                            <span className="text-xs text-gray-400">
-                              {new Date(t.date_echeance).toLocaleDateString('fr-FR')}
-                            </span>
-                          )}
-                          <span className={`badge ${
-                            t.statut === 'Terminée' ? 'badge-success' :
-                            t.statut === 'En cours' ? 'badge-warning' : 'badge-info'
-                          }`}>
-                            {t.statut}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Fichiers */}
+              {/* Fichiers Attachés */}
               <div className="card">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Fichiers ({dossierDetail.fichiers?.length || 0})
-                  </h3>
-                  <label
-                    className="btn-secondary text-xs cursor-pointer"
-                    style={{ padding: '4px 12px' }}
-                  >
-                    {uploadEnCours ? '⏳ Upload...' : '📎 Ajouter un fichier'}
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                      disabled={uploadEnCours}
-                      onChange={e => {
-                        const f = e.target.files?.[0];
-                        if (f) uploaderFichier(dossierDetail.id, f);
-                        e.target.value = '';
-                      }}
-                    />
-                  </label>
-                </div>
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                  Documents attachés ({dossierDetail.fichiers?.length || 0})
+                </h3>
+                
+                <label className="block mb-4 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-green-500 bg-gray-50/30 hover:bg-gray-50 text-center cursor-pointer transition-all">
+                  <input
+                    type="file"
+                    className="hidden"
+                    disabled={uploadEnCours}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) uploaderFichier(dossierDetail.id, f);
+                    }}
+                  />
+                  <span className="text-sm text-gray-500 block">
+                    {uploadEnCours ? '🔄 Upload en cours...' : '📎 Cliquer pour joindre un document (PDF, Word, Image)'}
+                  </span>
+                </label>
 
                 {!dossierDetail.fichiers?.length ? (
-                  <div className="text-center py-8">
-                    <p style={{ fontSize: 36, marginBottom: 8 }}>📂</p>
-                    <p className="text-sm text-gray-300">Aucun fichier joint</p>
-                    <p className="text-xs text-gray-300 mt-1">PDF, Word, Images (max 10 Mo)</p>
-                  </div>
+                  <p className="text-sm text-gray-300 italic text-center py-2">Aucun document lié à ce dossier</p>
                 ) : (
                   <div className="space-y-2">
-                    {dossierDetail.fichiers.map((f: any, i: number) => (
-                      <div
-                        key={i}
-                        className="flex items-center justify-between bg-gray-50 rounded-lg p-3 hover:bg-gray-100"
-                        style={{ transition: 'background 0.15s' }}
-                      >
-                        <div className="flex items-center gap-3" style={{ minWidth: 0 }}>
-                          <span style={{ fontSize: 22, flexShrink: 0 }}>
-                            {iconeFichier(f.type)}
-                          </span>
-                          <div style={{ minWidth: 0 }}>
-                            <a
-                              href={`${BACKEND}${f.url}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm font-medium text-blue-700 hover:underline"
-                              style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    {dossierDetail.fichiers.map((f: any) => (
+                      <div key={f.id} className="flex items-center justify-between border border-gray-100 rounded-lg p-3 hover:bg-gray-50">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="text-2xl flex-shrink-0">{iconeFichier(f.type_mime)}</span>
+                          <div className="min-w-0">
+                            <a 
+                              href={`${BACKEND}${f.url}`} 
+                              target="_blank" 
+                              rel="noreferrer" 
+                              className="text-sm font-medium text-blue-600 hover:underline block truncate"
                             >
-                              {f.nom}
+                              {f.nom_original}
                             </a>
                             <p className="text-xs text-gray-400">
-                              {tailleFormatee(f.taille)} · {f.ajoute_par} ·{' '}
-                              {new Date(f.date).toLocaleDateString('fr-FR')}
+                              {tailleFormatee(f.taille)} • par {f.depose_par_prenom}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
-                          <a
-                            href={`${BACKEND}${f.url}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-blue-600 hover:text-blue-800"
-                            title="Ouvrir"
-                          >
-                            ↗
-                          </a>
-                          <button
-                            onClick={() => supprimerFichier(dossierDetail.id, f.nomServeur)}
-                            className="text-xs text-red-400 hover:text-red-600"
-                            title="Supprimer ce fichier"
-                            style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-                          >
-                            🗑
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => supprimerFichier(dossierDetail.id, f.nom_serveur)}
+                          className="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors"
+                          title="Supprimer le fichier"
+                        >
+                          🗑
+                        </button>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
 
-              {/* Alertes / historique */}
-              {(dossierDetail.alertes?.length || 0) > 0 && (
-                <div className="card">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                    Historique
-                  </h3>
-                  <div className="space-y-2">
-                    {dossierDetail.alertes.map((a: any) => (
-                      <div key={a.id} className="bg-gray-50 rounded-lg p-3">
-                        <p className="text-sm text-gray-700">{a.message}</p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {new Date(a.created_at).toLocaleDateString('fr-FR')}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Footer actions */}
-            <div
-              className="p-4 border-t border-gray-100 bg-gray-50 flex gap-3 justify-between"
-              style={{ flexShrink: 0 }}
-            >
-              {peutValider(dossierDetail) && dossierDetail.statut !== 'Bouclé' ? (
-                <button
-                  onClick={() => valider(dossierDetail.id, dossierDetail.objet)}
-                  className="btn-primary flex-1"
-                  style={{ background: 'linear-gradient(135deg,#009A44,#006B30)' }}
-                >
-                  ✅ Valider et clôturer ce dossier
-                </button>
-              ) : dossierDetail.statut === 'Bouclé' ? (
-                <div className="flex-1 text-center">
-                  <span className="badge badge-success" style={{ fontSize: 13, padding: '8px 16px' }}>
-                    ✅ Dossier bouclé — Traitement terminé
-                  </span>
-                </div>
-              ) : (
-                <div className="flex-1" />
-              )}
-              <button onClick={fermerDetail} className="btn-secondary">
-                Fermer
-              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ════ MODAL NOUVEAU DOSSIER ════ */}
-      {showModal && (
-        <div
-          className="fixed inset-0 flex items-start justify-center z-50 overflow-y-auto"
-          style={{ background: 'rgba(0,0,0,0.45)', paddingTop: 40, paddingBottom: 40 }}
-        >
-          <div className="bg-white rounded-xl shadow-xl w-full" style={{ maxWidth: 540 }}>
-
-            {/* Header */}
-            <div
-              style={{
-                background: 'linear-gradient(135deg,#EF2B2D,#009A44)',
-                borderRadius: '12px 12px 0 0',
-              }}
-              className="flex items-center justify-between p-5"
-            >
-              <h3 className="font-bold text-white text-base">Nouveau dossier</h3>
-              <button
-                onClick={() => setShowModal(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.7)', fontSize: 22 }}
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="p-5 space-y-4" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-
-              {erreur && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-600 text-sm">
-                  ⚠️ {erreur}
-                </div>
-              )}
-
-              <div>
-                <label className="form-label">Référence *</label>
-                <input
-                  className="form-input"
-                  placeholder="UB-2025-XXX"
-                  value={form.reference}
-                  onChange={e => setForm({ ...form, reference: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <label className="form-label">Objet du dossier *</label>
-                <input
-                  className="form-input"
-                  placeholder="Intitulé du dossier"
-                  value={form.objet}
-                  onChange={e => setForm({ ...form, objet: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <label className="form-label">Instance</label>
-                <select
-                  className="form-input"
-                  value={form.instance}
-                  onChange={e => setForm({ ...form, instance: e.target.value })}
-                >
-                  {INSTANCES.map(i => <option key={i}>{i}</option>)}
-                </select>
-              </div>
-
-              <div>
-                <label className="form-label">Date limite *</label>
-                <input
-                  type="date"
-                  className="form-input"
-                  value={form.date_limite}
-                  onChange={e => setForm({ ...form, date_limite: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <label className="form-label">
-                  Avancement (%) — {form.niveau_mise_en_oeuvre}%
-                </label>
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={5}
-                  value={form.niveau_mise_en_oeuvre}
-                  onChange={e => setForm({ ...form, niveau_mise_en_oeuvre: parseInt(e.target.value) })}
-                  className="w-full accent-green-600"
-                />
-                <div className="flex justify-between text-xs text-gray-400 mt-1">
-                  <span>0%</span><span>50%</span><span>100%</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="form-label">Description</label>
-                <textarea
-                  className="form-input"
-                  rows={2}
-                  placeholder="Contexte et informations complémentaires..."
-                  value={form.description}
-                  onChange={e => setForm({ ...form, description: e.target.value })}
-                />
-              </div>
-
-              {/* Intervenants */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="form-label mb-0">Intervenants</label>
-                  <button
-                    type="button"
-                    onClick={ajouterIntervenant}
-                    className="text-xs text-green-700 hover:underline"
-                  >
-                    + Ajouter
-                  </button>
-                </div>
-                {form.intervenants.map((iv: any, idx: number) => (
-                  <div
-                    key={idx}
-                    className="border border-gray-100 rounded-lg p-3 mb-2 bg-gray-50"
-                  >
-                    <div className="grid grid-cols-2 gap-2 mb-2">
-                      <div>
-                        <label className="form-label">Nom complet</label>
-                        <input
-                          className="form-input text-xs"
-                          placeholder="OUÉDRAOGO Fatimata"
-                          value={iv.nom}
-                          onChange={e => majIntervenant(idx, 'nom', e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="form-label">Rôle</label>
-                        <input
-                          className="form-input text-xs"
-                          placeholder="Responsable"
-                          value={iv.role}
-                          onChange={e => majIntervenant(idx, 'role', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="form-label">Direction</label>
-                        <select
-                          className="form-input text-xs"
-                          value={iv.direction}
-                          onChange={e => majIntervenant(idx, 'direction', e.target.value)}
-                        >
-                          {DIRECTIONS.map(d => <option key={d}>{d}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="form-label">Email (alertes)</label>
-                        <input
-                          type="email"
-                          className="form-input text-xs"
-                          placeholder="nom@univ-burkina.bf"
-                          value={iv.email}
-                          onChange={e => majIntervenant(idx, 'email', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    {form.intervenants.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => setForm((f: any) => ({
-                          ...f,
-                          intervenants: f.intervenants.filter((_: any, i: number) => i !== idx),
-                        }))}
-                        className="text-xs text-red-400 hover:text-red-600 mt-2"
-                      >
-                        ✕ Retirer cet intervenant
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 p-5 border-t">
-              <button className="btn-secondary" onClick={() => setShowModal(false)}>
-                Annuler
-              </button>
-              <button className="btn-primary" onClick={sauvegarder} disabled={saving}>
-                {saving ? 'Enregistrement...' : 'Enregistrer'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Toast ── */}
-      {toast && (
-        <div
-          style={{
-            position:     'fixed',
-            bottom:       24,
-            left:         '50%',
-            transform:    'translateX(-50%)',
-            background:   toast.type === 'ok' ? '#009A44' : '#DC2626',
-            color:        '#fff',
-            padding:      '12px 28px',
-            borderRadius: 10,
-            fontSize:     14,
-            fontWeight:   600,
-            zIndex:       9999,
-            boxShadow:    '0 4px 20px rgba(0,0,0,0.2)',
-            whiteSpace:   'nowrap',
-          }}
-        >
-          {toast.msg}
-        </div>
-      )}
     </div>
   );
 }

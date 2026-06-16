@@ -45,25 +45,17 @@ async function migrate() {
       );
     `);
 
-    // ── Ajouter colonnes manquantes si table existe déjà ──
-    const colonnesAAjouter = [
-      `ALTER TABLE dossiers ADD COLUMN IF NOT EXISTS
-         valide_par UUID REFERENCES utilisateurs(id)`,
-      `ALTER TABLE dossiers ADD COLUMN IF NOT EXISTS
-         valide_par_nom VARCHAR(200)`,
-      `ALTER TABLE dossiers ADD COLUMN IF NOT EXISTS
-         date_validation TIMESTAMP`,
-      `ALTER TABLE dossiers ADD COLUMN IF NOT EXISTS
-         fichiers JSONB DEFAULT '[]'`,
-      `ALTER TABLE dossiers ADD COLUMN IF NOT EXISTS
-         cree_par_email VARCHAR(255)`,
-      `ALTER TABLE dossiers ADD COLUMN IF NOT EXISTS
-         description TEXT DEFAULT ''`,
-      `ALTER TABLE dossiers ADD COLUMN IF NOT EXISTS
-         updated_at TIMESTAMP DEFAULT NOW()`,
+    // ── Colonnes manquantes sur dossiers (si table déjà existante) ──
+    const colonnesDossiers = [
+      `ALTER TABLE dossiers ADD COLUMN IF NOT EXISTS valide_par UUID REFERENCES utilisateurs(id)`,
+      `ALTER TABLE dossiers ADD COLUMN IF NOT EXISTS valide_par_nom VARCHAR(200)`,
+      `ALTER TABLE dossiers ADD COLUMN IF NOT EXISTS date_validation TIMESTAMP`,
+      `ALTER TABLE dossiers ADD COLUMN IF NOT EXISTS fichiers JSONB DEFAULT '[]'`,
+      `ALTER TABLE dossiers ADD COLUMN IF NOT EXISTS cree_par_email VARCHAR(255)`,
+      `ALTER TABLE dossiers ADD COLUMN IF NOT EXISTS description TEXT DEFAULT ''`,
+      `ALTER TABLE dossiers ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()`,
     ];
-
-    for (const sql of colonnesAAjouter) {
+    for (const sql of colonnesDossiers) {
       await client.query(sql);
     }
 
@@ -112,23 +104,24 @@ async function migrate() {
       );
     `);
 
+    // ── Colonnes manquantes sur alertes (si table déjà existante) ──
+    const colonnesAlertes = [
+      `ALTER TABLE alertes ADD COLUMN IF NOT EXISTS reference VARCHAR(60)`,
+      `ALTER TABLE alertes ADD COLUMN IF NOT EXISTS objet VARCHAR(300)`,
+      `ALTER TABLE alertes ADD COLUMN IF NOT EXISTS priorite VARCHAR(50) DEFAULT 'Info'`,
+      `ALTER TABLE alertes ADD COLUMN IF NOT EXISTS responsable VARCHAR(150)`,
+      `ALTER TABLE alertes ADD COLUMN IF NOT EXISTS email_envoye BOOLEAN DEFAULT false`,
+      `ALTER TABLE alertes ADD COLUMN IF NOT EXISTS est_lue BOOLEAN DEFAULT false`,
+    ];
+    for (const sql of colonnesAlertes) {
+      await client.query(sql);
+    }
+
     // ── Index ─────────────────────────────────────────────
-    await client.query(
-      `CREATE INDEX IF NOT EXISTS idx_dossiers_statut
-       ON dossiers(statut);`
-    );
-    await client.query(
-      `CREATE INDEX IF NOT EXISTS idx_dossiers_cree_par
-       ON dossiers(cree_par);`
-    );
-    await client.query(
-      `CREATE INDEX IF NOT EXISTS idx_alertes_lue
-       ON alertes(est_lue);`
-    );
-    await client.query(
-      `CREATE INDEX IF NOT EXISTS idx_intervenants_dos
-       ON intervenants(dossier_id);`
-    );
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_dossiers_statut ON dossiers(statut);`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_dossiers_cree_par ON dossiers(cree_par);`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_alertes_lue ON alertes(est_lue);`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_intervenants_dos ON intervenants(dossier_id);`);
 
     await client.query('COMMIT');
     console.log('✅ Migration réussie — tables et colonnes à jour');

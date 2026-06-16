@@ -1,4 +1,4 @@
-// File: /home/ousseni/Téléchargements/instances-direction/frontend/src/app/page.tsx
+// File: /home/ousseni/Documents/ESI_L2_2025-2026/s4/ProjetTutore/instances-direction/frontend/src/app/page.tsx
 import * as entry from '../../../src/app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
