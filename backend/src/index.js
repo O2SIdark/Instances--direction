@@ -2,7 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const cors    = require('cors');
 const morgan  = require('morgan');
-const path    = require('path');
 const { testerConnexion } = require('./services/emailService');
 const { demarrerCron }    = require('./services/alerteCron');
 
@@ -15,10 +14,7 @@ app.use(cors({
 app.use(express.json());
 app.use(morgan('dev'));
 
-app.use(
-  '/uploads',
-  express.static(path.join(__dirname, '../uploads'))
-);
+// Plus besoin de servir /uploads : les fichiers sont sur Cloudinary
 
 app.use('/api/auth',         require('./routes/auth'));
 app.use('/api/dossiers',     require('./routes/dossiers'));
@@ -45,9 +41,9 @@ pool.query('SELECT NOW()').then(async () => {
     console.log(` Serveur sur http://localhost:${PORT}`);
     console.log(' PostgreSQL connecté');
     await testerConnexion();
-    demarrerCron(); // ← démarre l'envoi automatique des emails
+    demarrerCron();
   });
 }).catch(err => {
-  console.error('x PostgreSQL:', err.message);
+  console.error('❌ PostgreSQL:', err.message);
   process.exit(1);
 });

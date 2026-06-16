@@ -1,31 +1,22 @@
 require('dotenv').config();
+require('dotenv').config();
 const router = require('express').Router();
-const path   = require('path');
-const fs     = require('fs');
 const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('../config/cloudinary');
 const { query }                  = require('../config/database');
 const { authMiddleware }         = require('../middleware/auth');
 const { envoyerAlerteEmail,
         envoyerEmailValidation } = require('../services/emailService');
 
-// ── Création automatique du dossier uploads ───────────────
-const uploadDir = path.join(__dirname, '../../uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-  console.log('📁 Dossier uploads créé:', uploadDir);
-}
-
-// ── Config Multer ─────────────────────────────────────────
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename:    (req, file, cb) => {
-    const ts      = Date.now();
-    const propre  = file.originalname
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')   // supprime accents
-      .replace(/[^a-zA-Z0-9.\-_]/g, '_'); // remplace caractères spéciaux
-    cb(null, `${ts}_${propre}`);
-  },
+// ── Config Cloudinary Storage (remplace le disque local) ──
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: (req, file) => ({
+    folder:        'instances-direction',
+    resource_type: 'auto', // gère PDF, images, Word automatiquement
+    public_id:     `${Date.now()}_${file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`,
+  }),
 });
 
 const upload = multer({
@@ -284,10 +275,12 @@ router.post('/', async (req, res) => {
 // ────────────────────────────────────────────────────────
 // POST /api/dossiers/:id/fichiers — upload fichier
 // ────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────
+// POST /api/dossiers/:id/fichiers — upload vers Cloudinary
+// ────────────────────────────────────────────────────────
 router.post(
   '/:id/fichiers',
   (req, res, next) => {
-    // Middleware multer avec gestion d'erreur locale
     upload.single('fichier')(req, res, (err) => {
       if (err instanceof multer.MulterError) {
         if (err.code === 'LIMIT_FILE_SIZE')
@@ -303,27 +296,23 @@ router.post(
       return res.status(400).json({ message: 'Aucun fichier reçu' });
 
     try {
-      // Récupérer les fichiers existants
       const { rows } = await query(
         'SELECT fichiers FROM dossiers WHERE id = $1',
         [req.params.id]
       );
-      if (rows.length === 0) {
-        // Nettoyer le fichier uploadé
-        fs.unlink(req.file.path, () => {});
+      if (rows.length === 0)
         return res.status(404).json({ message: 'Dossier introuvable' });
-      }
 
-      const fichiers = Array.isArray(rows[0].fichiers)
-        ? rows[0].fichiers
-        : [];
+      const fichiers = Array.isArray(rows[0].fichiers) ? rows[0].fichiers : [];
 
+      // req.file.path = URL Cloudinary complète (https://res.cloudinary.com/...)
+      // req.file.filename = public_id Cloudinary (utile pour suppression)
       const nouveau = {
         nom:        req.file.originalname,
-        nomServeur: req.file.filename,
+        nomServeur: req.file.filename,   // public_id Cloudinary
         taille:     req.file.size,
         type:       req.file.mimetype,
-        url:        `/uploads/${req.file.filename}`,
+        url:        req.file.path,        // URL directe Cloudinary, déjà complète
         date:       new Date().toISOString(),
         ajoute_par: `${req.utilisateur.prenom} ${req.utilisateur.nom}`,
       };
@@ -331,22 +320,21 @@ router.post(
       fichiers.push(nouveau);
 
       await query(
-        `UPDATE dossiers
-         SET fichiers = $1::jsonb, updated_at = NOW()
-         WHERE id = $2`,
+        `UPDATE dossiers SET fichiers = $1::jsonb, updated_at = NOW() WHERE id = $2`,
         [JSON.stringify(fichiers), req.params.id]
       );
 
       res.json({ message: 'Fichier ajouté avec succès', fichier: nouveau });
     } catch (err) {
       console.error('POST /fichiers:', err.message);
-      // Nettoyer le fichier en cas d'erreur DB
-      if (req.file) fs.unlink(req.file.path, () => {});
       res.status(500).json({ message: err.message });
     }
   }
 );
 
+// ────────────────────────────────────────────────────────
+// DELETE /api/dossiers/:id/fichiers/:nomServeur
+// ────────────────────────────────────────────────────────
 // ────────────────────────────────────────────────────────
 // DELETE /api/dossiers/:id/fichiers/:nomServeur
 // ────────────────────────────────────────────────────────
@@ -359,23 +347,19 @@ router.delete('/:id/fichiers/:nomServeur', async (req, res) => {
     if (rows.length === 0)
       return res.status(404).json({ message: 'Dossier introuvable' });
 
-    const fichiers = Array.isArray(rows[0].fichiers)
-      ? rows[0].fichiers : [];
+    const fichiers = Array.isArray(rows[0].fichiers) ? rows[0].fichiers : [];
+    const nouveaux = fichiers.filter(f => f.nomServeur !== req.params.nomServeur);
 
-    const nouveaux = fichiers.filter(
-      f => f.nomServeur !== req.params.nomServeur
-    );
-
-    // Supprimer physiquement
-    const chemin = path.join(uploadDir, req.params.nomServeur);
-    if (fs.existsSync(chemin)) {
-      fs.unlinkSync(chemin);
+    // Supprimer sur Cloudinary (pas sur disque local)
+    try {
+      await cloudinary.uploader.destroy(req.params.nomServeur, { resource_type: 'auto' });
+    } catch (cloudErr) {
+      console.error('Suppression Cloudinary:', cloudErr.message);
+      // On continue même si Cloudinary échoue, pour ne pas bloquer la DB
     }
 
     await query(
-      `UPDATE dossiers
-       SET fichiers = $1::jsonb, updated_at = NOW()
-       WHERE id = $2`,
+      `UPDATE dossiers SET fichiers = $1::jsonb, updated_at = NOW() WHERE id = $2`,
       [JSON.stringify(nouveaux), req.params.id]
     );
 

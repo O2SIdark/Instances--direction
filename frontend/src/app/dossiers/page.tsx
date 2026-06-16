@@ -946,7 +946,7 @@ export default function Dossiers() {
                           <span className="text-2xl flex-shrink-0">{iconeFichier(f.type_mime)}</span>
                           <div className="min-w-0">
                             <a 
-                              href={`${BACKEND}${f.url}`} 
+                              href={{f.url} 
                               target="_blank" 
                               rel="noreferrer" 
                               className="text-sm font-medium text-blue-600 hover:underline block truncate"
