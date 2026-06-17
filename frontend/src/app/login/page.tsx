@@ -7,6 +7,8 @@ const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 const DEMO = [
   { label: 'Administrateur', email: 'admin@univ-burkina.bf',       mdp: 'admin123' },
+  { label: 'Agent',          email: 'f.ouedraogo@univ-burkina.bf', mdp: 'agent123' },
+  { label: 'Validateur',     email: 'm.sawadogo@univ-burkina.bf',  mdp: 'valid123' },
 ];
 
 export default function Login() {

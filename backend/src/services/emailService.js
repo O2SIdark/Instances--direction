@@ -177,7 +177,7 @@ async function envoyerAlerteEmail({ destinataire, priorite, dossier,
     await transporter.sendMail({
       from:    process.env.MAIL_FROM || process.env.MAIL_USER,
       to:      destinataire,
-      subject: `🔔 [${priorite}] Dossier ${dossier} — ${motif}`,
+      subject: ` [${priorite}] Dossier ${dossier} — ${motif}`,
       html:    templateAlerte({ priorite, dossier, objet, motif, responsable }),
     });
     console.log(` Email envoyé à ${destinataire}`);

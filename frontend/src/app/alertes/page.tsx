@@ -241,7 +241,7 @@ export default function Alertes() {
                       }}
                       title="Envoyer cette alerte par email"
                     >
-                      📩   Envoyer
+                         Envoyer
                     </button>
                   )}
                 </div>
@@ -304,7 +304,7 @@ export default function Alertes() {
                   onClick={envoyerEmail}
                   disabled={!emailDest || !!envoi}
                 >
-                  {envoi ? '⏳ Envoi...' : ' Envoyer'}
+                  {envoi ? ' Envoi...' : ' Envoyer'}
                 </button>
               </div>
             </div>
