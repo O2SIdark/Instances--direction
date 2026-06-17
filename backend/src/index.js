@@ -1,3 +1,4 @@
+// Chemin d'origine : backend/src/index.js
 require('dotenv').config();
 const express = require('express');
 const cors    = require('cors');
@@ -15,6 +16,11 @@ app.use(express.json());
 app.use(morgan('dev'));
 
 // Plus besoin de servir /uploads : les fichiers sont sur Cloudinary
+
+// ── Redirection racine (/) vers le Health Check pour éviter les logs d'erreurs 404 sur Render ──
+app.get('/', (req, res) => {
+  res.redirect('/api/health');
+});
 
 app.use('/api/auth',         require('./routes/auth'));
 app.use('/api/dossiers',     require('./routes/dossiers'));
