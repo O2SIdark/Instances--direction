@@ -45,12 +45,12 @@ const emptyForm = {
 // ── Helpers hors composant ────────────────────────────────
 function badge(s: string) {
   const m: Record<string, string> = {
-    'Bouclé':    'badge-success',
-    'En cours':  'badge-warning',
-    'En retard': 'badge-danger',
-    'Initié':    'badge-info',
+    'Bouclé':    'bg-green-100 text-green-800 border border-green-200',
+    'En cours':  'bg-amber-100 text-amber-800 border border-amber-200',
+    'En retard': 'bg-red-100 text-red-800 border border-red-200',
+    'Initié':    'bg-blue-100 text-blue-800 border border-blue-200',
   };
-  return <span className={`badge ${m[s] || 'badge-info'}`}>{s}</span>;
+  return <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${m[s] || 'bg-gray-100 text-gray-800'}`}>{s}</span>;
 }
 
 function iconeFichier(type: string) {
@@ -152,7 +152,7 @@ export default function Dossiers() {
       });
       setShowModal(false);
       setForm(emptyForm);
-      afficherToast(' Dossier créé avec succès');
+      afficherToast('Dossier créé avec succès');
       charger();
     } catch (err: any) {
       setErreur(err.message);
@@ -179,7 +179,7 @@ export default function Dossiers() {
     if (!confirm(`Valider et clôturer "${objet}" ? Cette action est irréversible.`)) return;
     try {
       await apiFetch(`/dossiers/${id}/valider`, { method: 'PATCH' });
-      afficherToast(' Dossier validé — emails envoyés aux intervenants');
+      afficherToast('Dossier validé — emails envoyés aux intervenants');
       if (dossierDetail?.id === id) await ouvrirDetail(id);
       charger();
     } catch (err: any) {
@@ -271,20 +271,20 @@ export default function Dossiers() {
   // RENDU
   // ═══════════════════════════════════════════════════════
   return (
-    <div>
+    <div className="p-4 md:p-6 max-w-7xl mx-auto">
 
       {/* Toast de Notification */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-50 p-3 rounded shadow-lg text-white text-sm font-medium ${toast.type === 'ok' ? 'bg-green-600' : 'bg-red-600'}`}>
+        <div className={`fixed top-4 right-4 z-50 p-3 rounded-xl shadow-lg text-white text-sm font-medium transition-all duration-300 ${toast.type === 'ok' ? 'bg-green-600' : 'bg-red-600'}`}>
           {toast.msg}
         </div>
       )}
 
       {/* ── Filtres + actions ── */}
-      <div className="flex flex-wrap gap-3 mb-4 items-center">
+      <div className="flex flex-wrap gap-3 mb-6 items-center">
 
         <select
-          className="form-input w-auto"
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none w-auto bg-white"
           value={filtreStatut}
           onChange={e => setFiltreStatut(e.target.value)}
         >
@@ -295,7 +295,7 @@ export default function Dossiers() {
         </select>
 
         <select
-          className="form-input w-auto"
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none w-auto bg-white"
           value={filtreInstance}
           onChange={e => setFiltreInstance(e.target.value)}
         >
@@ -304,8 +304,7 @@ export default function Dossiers() {
         </select>
 
         <input
-          className="form-input"
-          style={{ maxWidth: 200 }}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none w-full md:w-48 bg-white"
           placeholder="🔍 Rechercher..."
           value={recherche}
           onChange={e => setRecherche(e.target.value)}
@@ -318,13 +317,13 @@ export default function Dossiers() {
         <div className="flex gap-2 ml-auto">
           <button
             onClick={exporterCSV}
-            className="btn-secondary"
+            className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
             title="Exporter en CSV"
           >
             ⬇️ Exporter CSV
           </button>
           <button
-            className="btn-primary"
+            className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg shadow-sm transition-colors"
             onClick={(e) => { 
               e.stopPropagation();
               setForm(emptyForm); 
@@ -338,14 +337,14 @@ export default function Dossiers() {
       </div>
 
       {/* ── Tableau ── */}
-      <div className="card p-0 overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr style={{ background: '#f8f9fa' }}>
+            <tr className="bg-gray-50/75 border-b border-gray-100">
               {['Référence', 'Objet', 'Instance', 'Date limite', 'Avancement', 'Statut', 'Actions'].map(h => (
                 <th
                   key={h}
-                  className="text-left px-4 py-3 text-xs text-gray-400 font-medium border-b border-gray-100"
+                  className="text-left px-4 py-3 text-xs text-gray-400 font-medium uppercase tracking-wider"
                 >
                   {h}
                 </th>
@@ -373,23 +372,23 @@ export default function Dossiers() {
                 const enRetard = d.statut !== 'Bouclé' && jours < 0;
 
                 return (
-                  <tr key={d.id} className="border-b border-gray-50 hover:bg-gray-50">
+                  <tr key={d.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
 
                     {/* Référence */}
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3.5">
                       <p className="font-mono text-xs text-blue-700 font-bold">
                         {d.reference}
                       </p>
                       {(d.nb_alertes || 0) > 0 && (
-                        <span className="badge badge-danger" style={{ fontSize: 10 }}>
-                           {d.nb_alertes}
+                        <span className="inline-block mt-1 bg-red-100 text-red-700 rounded-full px-2 py-0.5 text-[10px] font-bold">
+                          ⚠️ {d.nb_alertes} alerte(s)
                         </span>
                       )}
                     </td>
 
                     {/* Objet */}
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-sm leading-tight max-w-xs" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td className="px-4 py-3.5">
+                      <p className="font-medium text-sm leading-tight max-w-xs truncate">
                         {d.objet}
                       </p>
                       <p className="text-xs text-gray-400 mt-0.5">
@@ -398,32 +397,32 @@ export default function Dossiers() {
                     </td>
 
                     {/* Instance */}
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3.5">
                       <span className="bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded">
                         {d.instance}
                       </span>
                     </td>
 
                     {/* Date limite */}
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3.5">
                       <p className={`text-xs font-bold ${enRetard ? 'text-red-600' : 'text-gray-600'}`}>
                         {new Date(d.date_limite).toLocaleDateString('fr-FR')}
                       </p>
                       {d.statut !== 'Bouclé' && (
-                        <p className={`text-xs mt-0.5 ${
+                        <p className={`text-[11px] mt-0.5 ${
                           enRetard ? 'text-red-500' : jours <= 7 ? 'text-amber-500' : 'text-gray-400'
                         }`}>
-                          {enRetard ? ` ${Math.abs(jours)}j retard` : `${jours}j restants`}
+                          {enRetard ? `${Math.abs(jours)}j retard` : `${jours}j restants`}
                         </p>
                       )}
                     </td>
 
                     {/* Avancement */}
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3.5">
                       <div className="flex items-center gap-2">
                         <div className="w-16 h-1.5 bg-gray-100 rounded-full">
                           <div
-                            className="h-1.5 rounded-full transition-all"
+                            className="h-1.5 rounded-full transition-all duration-300"
                             style={{
                               width: `${d.niveau_mise_en_oeuvre || 0}%`,
                               background:
@@ -439,10 +438,10 @@ export default function Dossiers() {
                     </td>
 
                     {/* Statut */}
-                    <td className="px-4 py-3">{badge(d.statut)}</td>
+                    <td className="px-4 py-3.5">{badge(d.statut)}</td>
 
                     {/* Actions */}
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3.5">
                       <div 
                         ref={menuOuvert === d.id ? menuRef : null} 
                         className="relative inline-block text-left"
@@ -453,20 +452,7 @@ export default function Dossiers() {
                             e.stopPropagation();
                             setMenuOuvert(menuOuvert === d.id ? null : d.id);
                           }}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: 32,
-                            height: 32,
-                            borderRadius: 8,
-                            border: '1px solid #E5E7EB',
-                            background: menuOuvert === d.id ? '#F3F4F6' : '#fff',
-                            cursor: 'pointer',
-                            fontSize: 16,
-                            color: '#6B7280',
-                            transition: 'background 0.15s',
-                          }}
+                          className={`flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 cursor-pointer text-lg transition-colors ${menuOuvert === d.id ? 'bg-gray-100 text-gray-800' : 'bg-white hover:bg-gray-50 text-gray-500'}`}
                           title="Actions"
                         >
                           ⋮
@@ -474,19 +460,7 @@ export default function Dossiers() {
 
                         {menuOuvert === d.id && (
                           <div
-                            style={{
-                              position: 'absolute',
-                              right: 0,
-                              top: '110%',
-                              zIndex: 50,
-                              minWidth: 190,
-                              background: '#fff',
-                              borderRadius: 10,
-                              border: '1px solid #E5E7EB',
-                              boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                              padding: 6,
-                              overflow: 'hidden',
-                            }}
+                            className="absolute right-0 top-full mt-1 z-50 min-width-[190px] w-48 bg-white rounded-xl border border-gray-200 shadow-xl p-1.5 overflow-hidden"
                           >
                             <button
                               onClick={(e) => { 
@@ -494,16 +468,9 @@ export default function Dossiers() {
                                 ouvrirDetail(d.id); 
                                 setMenuOuvert(null); 
                               }}
-                              style={{
-                                width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-                                padding: '9px 12px', borderRadius: 7, border: 'none',
-                                background: 'transparent', cursor: 'pointer',
-                                fontSize: 13, color: '#1F2937', textAlign: 'left',
-                              }}
-                              onMouseEnter={e => (e.currentTarget.style.background = '#EFF6FF')}
-                              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-800 transition-colors text-left"
                             >
-                              <span style={{ fontSize: 15 }}>👁</span>
+                              <span>👁</span>
                               <span>Voir le détail</span>
                             </button>
 
@@ -514,39 +481,25 @@ export default function Dossiers() {
                                   valider(d.id, d.objet); 
                                   setMenuOuvert(null); 
                                 }}
-                                style={{
-                                  width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-                                  padding: '9px 12px', borderRadius: 7, border: 'none',
-                                  background: 'transparent', cursor: 'pointer',
-                                  fontSize: 13, color: '#059669', textAlign: 'left',
-                                }}
-                                onMouseEnter={e => (e.currentTarget.style.background = '#ECFDF5')}
-                                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-green-600 hover:bg-green-50 transition-colors text-left font-medium"
                               >
                                 <span>✔️</span>
-                                <span>Valider et clôturer</span>
+                                <span>Valider / Clôturer</span>
                               </button>
                             )}
 
                             {peutSupprimer(d) && (
                               <>
-                                <div style={{ height: 1, background: '#F3F4F6', margin: '4px 0' }} />
+                                <div className="h-px bg-gray-100 my-1" />
                                 <button
                                   onClick={(e) => { 
                                     e.stopPropagation(); 
                                     supprimer(d.id, d.objet); 
                                     setMenuOuvert(null); 
                                   }}
-                                  style={{
-                                    width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-                                    padding: '9px 12px', borderRadius: 7, border: 'none',
-                                    background: 'transparent', cursor: 'pointer',
-                                    fontSize: 13, color: '#DC2626', textAlign: 'left',
-                                  }}
-                                  onMouseEnter={e => (e.currentTarget.style.background = '#FEF2F2')}
-                                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
                                 >
-                                  <span style={{ fontSize: 15 }}>🗑</span>
+                                  <span>🗑</span>
                                   <span>Supprimer</span>
                                 </button>
                               </>
@@ -566,17 +519,17 @@ export default function Dossiers() {
       {/* ── MODAL DE CRÉATION DE DOSSIER DÉGRADÉE ET STYLISÉE ── */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
             
-            {/* Header personnalisé avec Dégradé */}
+            {/* Header personnalisé avec Dégradé Burkina */}
             <div 
               style={{ background: 'linear-gradient(135deg, #EF2B2D, #009A44)' }} 
-              className="p-4 flex justify-between items-center text-white"
+              className="px-6 py-4 flex justify-between items-center text-white"
             >
               <h2 className="text-lg font-bold">Nouveau dossier</h2>
               <button 
                 onClick={() => setShowModal(false)} 
-                className="text-white/80 hover:text-white text-2xl font-semibold leading-none focus:outline-none"
+                className="text-white/80 hover:text-white text-2xl font-bold leading-none focus:outline-none"
               >
                 &times;
               </button>
@@ -595,7 +548,7 @@ export default function Dossiers() {
                 <label className="block text-sm font-medium text-gray-600 mb-1">Référence *</label>
                 <input 
                   type="text" 
-                  className="form-input w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none" 
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none" 
                   value={form.reference} 
                   onChange={e => setForm({...form, reference: e.target.value})} 
                   placeholder="UB-2025-XXX" 
@@ -607,7 +560,7 @@ export default function Dossiers() {
                 <label className="block text-sm font-medium text-gray-600 mb-1">Objet du dossier *</label>
                 <input 
                   type="text" 
-                  className="form-input w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none" 
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none" 
                   value={form.objet} 
                   onChange={e => setForm({...form, objet: e.target.value})} 
                   placeholder="Intitulé du dossier" 
@@ -618,7 +571,7 @@ export default function Dossiers() {
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Instance</label>
                 <select 
-                  className="form-input w-full border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none" 
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none" 
                   value={form.instance} 
                   onChange={e => setForm({...form, instance: e.target.value})}
                 >
@@ -631,7 +584,7 @@ export default function Dossiers() {
                 <label className="block text-sm font-medium text-gray-600 mb-1">Date limite *</label>
                 <input 
                   type="date" 
-                  className="form-input w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none text-gray-500" 
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none text-gray-600" 
                   value={form.date_limite} 
                   onChange={e => setForm({...form, date_limite: e.target.value})} 
                 />
@@ -662,7 +615,7 @@ export default function Dossiers() {
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Description</label>
                 <textarea 
-                  className="form-input w-full h-24 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none resize-none" 
+                  className="w-full h-24 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none resize-none" 
                   value={form.description} 
                   onChange={e => setForm({...form, description: e.target.value})} 
                   placeholder="Contexte et informations complémentaires..." 
@@ -672,37 +625,37 @@ export default function Dossiers() {
               {/* Section Intervenants */}
               <div className="border-t border-gray-100 pt-4">
                 <div className="flex justify-between items-center mb-3">
-                  <span className="text-sm font-medium text-gray-600">Intervenants</span>
+                  <span className="text-sm font-semibold text-gray-700">Intervenants</span>
                   <button 
                     type="button" 
                     onClick={ajouterIntervenant} 
-                    className="text-sm text-green-600 hover:text-green-700 font-medium transition-colors"
+                    className="text-xs text-green-600 hover:text-green-700 font-bold bg-green-50 px-2 py-1 rounded"
                   >
-                    + Ajouter
+                    + Ajouter un intervenant
                   </button>
                 </div>
                 
                 <div className="space-y-3">
                   {form.intervenants.map((inter: any, idx: number) => (
-                    <div key={idx} className="bg-gray-50/60 border border-gray-100 rounded-xl p-4 space-y-3 relative">
+                    <div key={idx} className="bg-gray-50/50 border border-gray-100 rounded-xl p-4 space-y-3 relative">
                       
                       {/* Ligne Nom / Rôle */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-xs text-gray-400 mb-1">Nom complet</label>
+                          <label className="block text-[10px] uppercase font-semibold text-gray-400 mb-1">Nom complet</label>
                           <input 
                             type="text" 
-                            className="form-input w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none bg-white" 
+                            className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none bg-white" 
                             placeholder="OUÉDRAOGO Fatimata" 
                             value={inter.nom} 
                             onChange={e => majIntervenant(idx, 'nom', e.target.value)} 
                           />
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-400 mb-1">Rôle</label>
+                          <label className="block text-[10px] uppercase font-semibold text-gray-400 mb-1">Rôle</label>
                           <input 
                             type="text" 
-                            className="form-input w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none bg-white" 
+                            className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none bg-white" 
                             placeholder={idx === 0 ? "Responsable" : "Intervenant"}
                             value={inter.role} 
                             onChange={e => majIntervenant(idx, 'role', e.target.value)} 
@@ -713,9 +666,9 @@ export default function Dossiers() {
                       {/* Ligne Direction / Email */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-xs text-gray-400 mb-1">Direction</label>
+                          <label className="block text-[10px] uppercase font-semibold text-gray-400 mb-1">Direction</label>
                           <select 
-                            className="form-input w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm outline-none bg-white" 
+                            className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm outline-none bg-white" 
                             value={inter.direction} 
                             onChange={e => majIntervenant(idx, 'direction', e.target.value)}
                           >
@@ -723,10 +676,10 @@ export default function Dossiers() {
                           </select>
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-400 mb-1">Email (alertes)</label>
+                          <label className="block text-[10px] uppercase font-semibold text-gray-400 mb-1">Email (pour alertes)</label>
                           <input 
                             type="email" 
-                            className="form-input w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none bg-white" 
+                            className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none bg-white" 
                             placeholder="nom@univ-burkina.bf" 
                             value={inter.email} 
                             onChange={e => majIntervenant(idx, 'email', e.target.value)} 
@@ -742,7 +695,7 @@ export default function Dossiers() {
                             ...f,
                             intervenants: f.intervenants.filter((_: any, i: number) => i !== idx)
                           }))}
-                          className="text-xs text-red-500 hover:text-red-600 flex items-center gap-1 mt-1 transition-colors"
+                          className="text-xs text-red-500 hover:text-red-600 flex items-center gap-1 mt-1 font-semibold"
                         >
                           &times; Retirer cet intervenant
                         </button>
@@ -758,7 +711,7 @@ export default function Dossiers() {
               <button 
                 type="button" 
                 onClick={() => setShowModal(false)} 
-                className="px-5 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors" 
+                className="px-5 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors" 
                 disabled={saving}
               >
                 Annuler
@@ -766,7 +719,7 @@ export default function Dossiers() {
               <button 
                 type="button" 
                 onClick={sauvegarder} 
-                className="px-5 py-2 bg-[#009A44] hover:bg-[#00843A] text-white rounded-lg text-sm font-medium shadow-sm transition-colors" 
+                className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium shadow-sm transition-colors" 
                 disabled={saving}
               >
                 {saving ? 'Enregistrement...' : 'Enregistrer'}
@@ -777,201 +730,142 @@ export default function Dossiers() {
         </div>
       )}
 
-      {/* ── PANNEAU DÉTAIL ── */}
+      {/* ── PANNEAU DÉTAIL DÉROULANT ── */}
       {dossierDetail && (
-        <div
-          className="fixed inset-0 z-50 flex items-start justify-end"
-          style={{ background: 'rgba(0,0,0,0.5)' }}
-        >
-          <div
-            className="bg-white flex flex-col"
-            style={{ width: '100%', maxWidth: 680, minHeight: '100vh', overflowY: 'auto' }}
-          >
-            {/* Header */}
-            <div
-              style={{ background: 'linear-gradient(135deg,#EF2B2D,#009A44)', flexShrink: 0 }}
-              className="p-5 flex items-start justify-between"
-            >
+        <div className="fixed inset-0 z-50 flex items-start justify-end bg-black/40 p-0 md:p-4">
+          <div className="bg-white h-full max-w-xl w-full shadow-2xl overflow-y-auto flex flex-col p-6 rounded-l-2xl md:rounded-2xl border-l border-gray-100">
+            
+            {/* Header du panneau */}
+            <div className="flex justify-between items-center border-b pb-4 mb-4">
               <div>
-                <p className="text-white/70 text-xs font-mono mb-1">
+                <span className="text-xs font-mono font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded">
                   {dossierDetail.reference}
-                </p>
-                <h2 className="text-white font-bold text-base leading-tight" style={{ maxWidth: 500 }}>
-                  {dossierDetail.objet}
-                </h2>
-                <div className="flex gap-2 mt-2 flex-wrap">
-                  {badge(dossierDetail.statut)}
-                  {dossierDetail.valide_par_nom && (
-                    <span className="badge badge-success">
-                      ✅ Validé par {dossierDetail.valide_par_nom}
-                    </span>
-                  )}
-                </div>
+                </span>
+                <h3 className="text-lg font-extrabold text-gray-800 mt-2">{dossierDetail.objet}</h3>
               </div>
-              <button
-                onClick={fermerDetail}
-                className="text-white/70 hover:text-white ml-4"
-                style={{ fontSize: 26, lineHeight: 1, background: 'none', border: 'none', cursor: 'pointer' }}
+              <button 
+                onClick={fermerDetail} 
+                className="text-gray-400 hover:text-gray-600 text-3xl font-bold leading-none"
               >
                 &times;
               </button>
             </div>
 
-            {/* Corps */}
-            <div className="flex-1 p-5 space-y-5" style={{ overflowY: 'auto' }}>
+            {/* Infos Principales */}
+            <div className="space-y-4 flex-1">
+              <div>
+                <span className="text-xs uppercase font-bold text-gray-400">Instance</span>
+                <p className="text-sm font-medium text-gray-700 mt-1">{dossierDetail.instance}</p>
+              </div>
 
-              {/* Infos générales */}
-              <div className="card">
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                  Informations générales
-                </h3>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-xs text-gray-400">Instance</p>
-                    <p className="font-medium">{dossierDetail.instance}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400">Date limite</p>
-                    <p className="font-medium">
-                      {new Date(dossierDetail.date_limite).toLocaleDateString('fr-FR')}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400 mb-1">Avancement</p>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-2 bg-gray-100 rounded-full">
-                        <div
-                          className="h-2 rounded-full"
-                          style={{
-                            width: `${dossierDetail.niveau_mise_en_oeuvre}%`,
-                            background: '#009A44',
-                          }}
-                        />
-                      </div>
-                      <span className="text-xs font-bold text-gray-600">
-                        {dossierDetail.niveau_mise_en_oeuvre}%
-                      </span>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400">Créé par</p>
-                    <p className="font-medium">
-                      {dossierDetail.createur_prenom} {dossierDetail.createur_nom}
-                    </p>
-                  </div>
-                  {dossierDetail.date_fin_effective && (
-                    <div>
-                      <p className="text-xs text-gray-400">Date de clôture</p>
-                      <p className="font-medium text-green-700">
-                        {new Date(dossierDetail.date_fin_effective).toLocaleDateString('fr-FR')}
-                      </p>
-                    </div>
-                  )}
-                  {dossierDetail.valide_par_nom && (
-                    <div>
-                      <p className="text-xs text-gray-400">Validé par</p>
-                      <p className="font-medium text-green-700">
-                        {dossierDetail.valide_par_nom}
-                      </p>
-                    </div>
-                  )}
+              <div>
+                <span className="text-xs uppercase font-bold text-gray-400">Description</span>
+                <p className="text-sm text-gray-600 mt-1 whitespace-pre-line bg-gray-50 p-3 rounded-xl border border-gray-100">
+                  {dossierDetail.description || 'Aucune description fournie.'}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-xs uppercase font-bold text-gray-400">Statut</span>
+                  <div className="mt-1">{badge(dossierDetail.statut)}</div>
                 </div>
-                {dossierDetail.description && (
-                  <div className="mt-3 pt-3 border-t border-gray-100">
-                    <p className="text-xs text-gray-400 mb-1">Description</p>
-                    <p className="text-sm text-gray-700 leading-relaxed">
-                      {dossierDetail.description}
-                    </p>
-                  </div>
-                )}
+                <div>
+                  <span className="text-xs uppercase font-bold text-gray-400">Date limite</span>
+                  <p className="text-sm font-bold text-gray-700 mt-1">
+                    {new Date(dossierDetail.date_limite).toLocaleDateString('fr-FR')}
+                  </p>
+                </div>
+              </div>
+
+              {/* Pièces jointes (Fichiers) */}
+              <div className="border-t border-gray-100 pt-4">
+                <h4 className="text-sm font-bold text-gray-700 mb-2">📎 Pièces jointes ({dossierDetail.fichiers?.length || 0})</h4>
+                
+                {/* Liste des fichiers */}
+                <div className="space-y-2 mb-3">
+                  {dossierDetail.fichiers && dossierDetail.fichiers.map((f: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between p-2.5 bg-gray-50/70 border border-gray-100 rounded-xl text-xs">
+                      <div className="flex items-center gap-2 truncate">
+                        <span>{iconeFichier(f.type)}</span>
+                        <a 
+                          href={f.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="font-medium text-blue-600 hover:underline truncate"
+                        >
+                          {f.nom}
+                        </a>
+                        <span className="text-gray-400">({tailleFormatee(f.taille)})</span>
+                      </div>
+                      <button 
+                        onClick={() => supprimerFichier(dossierDetail.id, f.nomServeur)}
+                        className="text-red-500 hover:text-red-700 font-bold px-2"
+                        title="Supprimer la pièce jointe"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Bouton d'upload vers Cloudinary */}
+                <div>
+                  <label className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 hover:bg-green-100 rounded-lg cursor-pointer transition-colors">
+                    <span>{uploadEnCours ? '⏳ Transfert...' : '➕ Ajouter un fichier'}</span>
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      disabled={uploadEnCours}
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          uploaderFichier(dossierDetail.id, e.target.files[0]);
+                        }
+                      }}
+                    />
+                  </label>
+                  <p className="text-[10px] text-gray-400 mt-1">Formats acceptés : PDF, Word, Images (Max 10 Mo)</p>
+                </div>
               </div>
 
               {/* Intervenants */}
-              <div className="card">
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                  Intervenants ({dossierDetail.intervenants?.length || 0})
-                </h3>
-                {!dossierDetail.intervenants?.length ? (
-                  <p className="text-sm text-gray-300 italic">Aucun intervenant assigné</p>
-                ) : (
-                  <div className="space-y-2">
-                    {dossierDetail.intervenants.map((iv: any) => (
-                      <div
-                        key={iv.id}
-                        className="flex items-center justify-between bg-gray-50 rounded-lg p-3"
-                      >
-                        <div>
-                          <p className="text-sm font-semibold">{iv.nom}</p>
-                          <p className="text-xs text-gray-500">
-                            {iv.role}{iv.direction ? ` — ${iv.direction}` : ''}
-                          </p>
-                          {iv.email && (
-                            <p className="text-xs text-blue-600">{iv.email}</p>
-                          )}
-                        </div>
+              <div className="border-t border-gray-100 pt-4">
+                <h4 className="text-sm font-bold text-gray-700 mb-2">👥 Intervenants ({dossierDetail.intervenants?.length || 0})</h4>
+                <div className="space-y-2">
+                  {dossierDetail.intervenants && dossierDetail.intervenants.map((iv: any, i: number) => (
+                    <div key={i} className="p-3 bg-gray-50/50 border border-gray-100 rounded-xl text-xs flex justify-between items-center">
+                      <div>
+                        <p className="font-bold text-gray-800">{iv.nom}</p>
+                        <p className="text-gray-400">{iv.role} — {iv.direction}</p>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Fichiers Attachés */}
-              <div className="card">
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                  Documents attachés ({dossierDetail.fichiers?.length || 0})
-                </h3>
-                
-                <label className="block mb-4 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-green-500 bg-gray-50/30 hover:bg-gray-50 text-center cursor-pointer transition-all">
-                  <input
-                    type="file"
-                    className="hidden"
-                    disabled={uploadEnCours}
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) uploaderFichier(dossierDetail.id, f);
-                    }}
-                  />
-                  <span className="text-sm text-gray-500 block">
-                    {uploadEnCours ? '🔄 Upload en cours...' : '📎 Cliquer pour joindre un document (PDF, Word, Image)'}
-                  </span>
-                </label>
-
-                {!dossierDetail.fichiers?.length ? (
-                  <p className="text-sm text-gray-300 italic text-center py-2">Aucun document lié à ce dossier</p>
-                ) : (
-                  <div className="space-y-2">
-                    {dossierDetail.fichiers.map((f: any) => (
-                      <div key={f.id} className="flex items-center justify-between border border-gray-100 rounded-lg p-3 hover:bg-gray-50">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <span className="text-2xl flex-shrink-0">{iconeFichier(f.type_mime)}</span>
-                          <div className="min-w-0">
-                            <a 
-                              href={{f.url} 
-                              target="_blank" 
-                              rel="noreferrer" 
-                              className="text-sm font-medium text-blue-600 hover:underline block truncate"
-                            >
-                              {f.nom_original}
-                            </a>
-                            <p className="text-xs text-gray-400">
-                              {tailleFormatee(f.taille)} • par {f.depose_par_prenom}
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => supprimerFichier(dossierDetail.id, f.nom_serveur)}
-                          className="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors"
-                          title="Supprimer le fichier"
-                        >
-                          🗑
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      <span className="font-mono bg-white px-2 py-0.5 rounded border text-gray-500 font-bold">
+                        {iv.avancement || 0}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
             </div>
+
+            {/* Pied de page du panneau */}
+            <div className="border-t border-gray-100 pt-4 mt-6 flex gap-2">
+              {peutValider(dossierDetail) && dossierDetail.statut !== 'Bouclé' && (
+                <button 
+                  onClick={() => valider(dossierDetail.id, dossierDetail.objet)}
+                  className="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors"
+                >
+                  Valider et clôturer
+                </button>
+              )}
+              <button 
+                onClick={fermerDetail}
+                className="px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-medium transition-colors"
+              >
+                Fermer
+              </button>
+            </div>
+
           </div>
         </div>
       )}
