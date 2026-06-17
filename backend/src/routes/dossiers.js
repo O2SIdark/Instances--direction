@@ -1,27 +1,19 @@
 require('dotenv').config();
-require('dotenv').config();
 const router = require('express').Router();
 const multer = require('multer');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('../config/cloudinary');
-const { query }                  = require('../config/database');
-const { authMiddleware }         = require('../middleware/auth');
-const { envoyerAlerteEmail,
-        envoyerEmailValidation } = require('../services/emailService');
+const { query } = require('../config/database');
+const { authMiddleware } = require('../middleware/auth');
+const { envoyerAlerteEmail, envoyerEmailValidation } = require('../services/emailService');
 
-// ── Config Cloudinary Storage (remplace le disque local) ──
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: (req, file) => ({
-    folder:        'instances-direction',
-    resource_type: 'auto', // gère PDF, images, Word automatiquement
-    public_id:     `${Date.now()}_${file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`,
-  }),
-});
+// ── Config Multer local en mémoire (Memory Storage) ──
+// Cette configuration supprime définitivement 'multer-storage-cloudinary'
+// Elle stocke le fichier temporairement dans la RAM avant de l'envoyer à Cloudinary.
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 Mo
+  limits: { fileSize: 10 * 1024 * 1024 }, // Limite de 10 Mo
   fileFilter: (req, file, cb) => {
     const typesOK = [
       'application/pdf',
@@ -273,10 +265,7 @@ router.post('/', async (req, res) => {
 });
 
 // ────────────────────────────────────────────────────────
-// POST /api/dossiers/:id/fichiers — upload fichier
-// ────────────────────────────────────────────────────────
-// ────────────────────────────────────────────────────────
-// POST /api/dossiers/:id/fichiers — upload vers Cloudinary
+// POST /api/dossiers/:id/fichiers — upload direct Cloudinary (Buffer)
 // ────────────────────────────────────────────────────────
 router.post(
   '/:id/fichiers',
@@ -305,14 +294,37 @@ router.post(
 
       const fichiers = Array.isArray(rows[0].fichiers) ? rows[0].fichiers : [];
 
-      // req.file.path = URL Cloudinary complète (https://res.cloudinary.com/...)
-      // req.file.filename = public_id Cloudinary (utile pour suppression)
+      // Génération d'un nom de fichier sécurisé pour Cloudinary
+      const originalClean = req.file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+      const uniquePublicId = `${Date.now()}_${originalClean}`;
+
+      // Utilisation d'un uploadStream pour téléverser le buffer de mémoire directement vers Cloudinary
+      const uploadToCloudinary = (fileBuffer) => {
+        return new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            {
+              folder: 'instances-direction',
+              resource_type: 'auto',
+              public_id: uniquePublicId
+            },
+            (error, result) => {
+              if (error) return reject(error);
+              resolve(result);
+            }
+          );
+          stream.end(fileBuffer);
+        });
+      };
+
+      // Exécution de l'upload vers Cloudinary
+      const uploadResult = await uploadToCloudinary(req.file.buffer);
+
       const nouveau = {
         nom:        req.file.originalname,
-        nomServeur: req.file.filename,   // public_id Cloudinary
+        nomServeur: uploadResult.public_id, // public_id Cloudinary pour future suppression
         taille:     req.file.size,
         type:       req.file.mimetype,
-        url:        req.file.path,        // URL directe Cloudinary, déjà complète
+        url:        uploadResult.secure_url, // URL HTTPS directe Cloudinary
         date:       new Date().toISOString(),
         ajoute_par: `${req.utilisateur.prenom} ${req.utilisateur.nom}`,
       };
@@ -335,9 +347,6 @@ router.post(
 // ────────────────────────────────────────────────────────
 // DELETE /api/dossiers/:id/fichiers/:nomServeur
 // ────────────────────────────────────────────────────────
-// ────────────────────────────────────────────────────────
-// DELETE /api/dossiers/:id/fichiers/:nomServeur
-// ────────────────────────────────────────────────────────
 router.delete('/:id/fichiers/:nomServeur', async (req, res) => {
   try {
     const { rows } = await query(
@@ -350,12 +359,12 @@ router.delete('/:id/fichiers/:nomServeur', async (req, res) => {
     const fichiers = Array.isArray(rows[0].fichiers) ? rows[0].fichiers : [];
     const nouveaux = fichiers.filter(f => f.nomServeur !== req.params.nomServeur);
 
-    // Supprimer sur Cloudinary (pas sur disque local)
+    // Supprimer sur Cloudinary grâce au public_id (nomServeur)
     try {
       await cloudinary.uploader.destroy(req.params.nomServeur, { resource_type: 'auto' });
     } catch (cloudErr) {
       console.error('Suppression Cloudinary:', cloudErr.message);
-      // On continue même si Cloudinary échoue, pour ne pas bloquer la DB
+      // On continue même si Cloudinary échoue, pour ne pas désynchroniser la DB
     }
 
     await query(
