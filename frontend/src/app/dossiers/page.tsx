@@ -87,7 +87,7 @@ export default function Dossiers() {
   const [menuOuvert,     setMenuOuvert]     = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  // ── Fermer le menu déroulant au clic extérieur ──
+  // ── Fermer le menu déroulant au clic extérieur 
   useEffect(() => {
     const fermer = (e: MouseEvent) => {
       if (menuOuvert && menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -98,13 +98,13 @@ export default function Dossiers() {
     return () => document.removeEventListener('mousedown', fermer);
   }, [menuOuvert]);
 
-  // ── Toast ───────────────────────────────────────────────
+  // ── Toast 
   const afficherToast = (msg: string, type: 'ok' | 'err' = 'ok') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
   };
 
-  // ── Charger la liste ────────────────────────────────────
+  // ── Charger la liste 
   const charger = useCallback(async () => {
     setLoading(true);
     try {
@@ -122,7 +122,7 @@ export default function Dossiers() {
 
   useEffect(() => { charger(); }, [charger]);
 
-  // ── Détail dossier ──────────────────────────────────────
+  // ── Détail dossier 
   const ouvrirDetail = async (id: string) => {
     try {
       const d = await apiFetch(`/dossiers/${id}`);
@@ -134,7 +134,7 @@ export default function Dossiers() {
 
   const fermerDetail = () => setDossierDetail(null);
 
-  // ── Créer dossier ───────────────────────────────────────
+  // ── Créer dossier 
   const sauvegarder = async () => {
     setErreur('');
     if (!form.reference || !form.objet || !form.date_limite) {
@@ -161,7 +161,7 @@ export default function Dossiers() {
     }
   };
 
-  // ── Supprimer ───────────────────────────────────────────
+  // ── Supprimer 
   const supprimer = async (id: string, objet: string) => {
     if (!confirm(`Supprimer définitivement "${objet}" ?`)) return;
     try {
@@ -174,7 +174,7 @@ export default function Dossiers() {
     }
   };
 
-  // ── Valider (admin ou créateur) ─────────────────────────
+  // ── Valider (admin ou créateur) 
   const valider = async (id: string, objet: string) => {
     if (!confirm(`Valider et clôturer "${objet}" ? Cette action est irréversible.`)) return;
     try {
@@ -187,7 +187,7 @@ export default function Dossiers() {
     }
   };
 
-  // ── Upload fichier ──────────────────────────────────────
+  // ── Upload fichier 
   const uploaderFichier = async (id: string, fichier: File) => {
     setUploadEnCours(true);
     try {
@@ -210,7 +210,7 @@ export default function Dossiers() {
     }
   };
 
-  // ── Supprimer fichier ───────────────────────────────────
+  // ── Supprimer fichier 
   const supprimerFichier = async (dossierId: string, nomServeur: string) => {
     if (!confirm('Supprimer ce fichier ?')) return;
     try {
@@ -224,7 +224,7 @@ export default function Dossiers() {
     }
   };
 
-  // ── Export CSV ──────────────────────────────────────────
+  // ── Export CSV 
   const exporterCSV = () => {
     const token = localStorage.getItem('token');
     fetch(`${API}/dossiers/export/csv`, {
@@ -242,7 +242,7 @@ export default function Dossiers() {
       .catch(() => afficherToast('Erreur export', 'err'));
   };
 
-  // ── Helpers intervenants du formulaire ──────────────────
+  // ── Helpers intervenants du formulaire 
   const ajouterIntervenant = () =>
     setForm((f: any) => ({
       ...f,
@@ -260,7 +260,7 @@ export default function Dossiers() {
       ),
     }));
 
-  // ── Droits ─────────────────────────────────────────────
+  // ── Droits 
   const peutSupprimer = (d: any) =>
     user?.role === 'admin' || d.cree_par === user?.id;
 
@@ -381,7 +381,7 @@ export default function Dossiers() {
                       </p>
                       {(d.nb_alertes || 0) > 0 && (
                         <span className="inline-block mt-1 bg-red-100 text-red-700 rounded-full px-2 py-0.5 text-[10px] font-bold">
-                          ⚠️ {d.nb_alertes} alerte(s)
+                           {d.nb_alertes} alerte(s)
                         </span>
                       )}
                     </td>
