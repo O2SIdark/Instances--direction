@@ -470,7 +470,7 @@ export default function Dossiers() {
                               }}
                               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-800 transition-colors text-left"
                             >
-                              <span>👁</span>
+                              <span></span>
                               <span>Voir le détail</span>
                             </button>
 
@@ -483,7 +483,7 @@ export default function Dossiers() {
                                 }}
                                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-green-600 hover:bg-green-50 transition-colors text-left font-medium"
                               >
-                                <span>✔️</span>
+                                <span></span>
                                 <span>Valider / Clôturer</span>
                               </button>
                             )}
@@ -499,7 +499,7 @@ export default function Dossiers() {
                                   }}
                                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
                                 >
-                                  <span>🗑</span>
+                                  <span></span>
                                   <span>Supprimer</span>
                                 </button>
                               </>
